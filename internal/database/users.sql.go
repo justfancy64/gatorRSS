@@ -49,7 +49,7 @@ type CreateFeedParams struct {
 	UpdatedAt time.Time
 	Name      string
 	Url       string
-	UserID    uuid.NullUUID
+	UserID    uuid.UUID
 }
 
 func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, error) {
@@ -122,6 +122,41 @@ func (q *Queries) GetUser(ctx context.Context, name string) (User, error) {
 		&i.Name,
 	)
 	return i, err
+}
+
+const listFeed = `-- name: ListFeed :many
+SELECT feeds.name, url, users.name FROM feeds
+INNER JOIN users
+ON feeds.user_id = users.id
+`
+
+type ListFeedRow struct {
+	Name   string
+	Url    string
+	Name_2 string
+}
+
+func (q *Queries) ListFeed(ctx context.Context) ([]ListFeedRow, error) {
+	rows, err := q.db.QueryContext(ctx, listFeed)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListFeedRow
+	for rows.Next() {
+		var i ListFeedRow
+		if err := rows.Scan(&i.Name, &i.Url, &i.Name_2); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listUsers = `-- name: ListUsers :many

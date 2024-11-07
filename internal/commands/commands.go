@@ -117,12 +117,12 @@ func HandlerAddFeed(s *state.State, cmd Command) error {
   if len(cmd.Args) < 2 {
     return fmt.Errorf("not enough arguments needs: Name URL")
   }
-  /*
+  
   CurrUser, err := s.DB.GetUser(context.Background(), s.Cfg.CurrentUserName)
   if err != nil {
     fmt.Errorf("error fetching user info from DB: %v",err)
   }
-  */
+  
 
    feed, err := s.DB.CreateFeed(context.Background(), database.CreateFeedParams{
     ID:          uuid.New(),
@@ -130,7 +130,7 @@ func HandlerAddFeed(s *state.State, cmd Command) error {
     UpdatedAt:   time.Now().UTC(),
     Name:        cmd.Args[0],
     Url:         cmd.Args[1],
-    //UserID       CurrUser.ID,
+    UserID:       CurrUser.ID,
 
 
   })
@@ -141,3 +141,16 @@ func HandlerAddFeed(s *state.State, cmd Command) error {
   return nil
 }
 
+
+
+func HandlerListFeed(s *state.State, cmd Command) error{
+  if len(cmd.Args) > 0 {
+    return fmt.Errorf("no arguments needed with 'feeds' command")
+   }
+  feeds, err := s.DB.ListFeed(context.Background()) // []ListFeedRow{Name, Url,Name_2}
+  if err != nil {
+    return fmt.Errorf("error in ListFeed: %v")
+  }
+  fmt.Println(feeds)
+  return nil
+}
