@@ -54,6 +54,7 @@ func main() {
   cmds.Register("reset",    commands.HandlerClear)
   cmds.Register("users",    commands.HandlerListUsers)
   cmds.Register("agg",      commands.HandlerAgg)
+  cmds.Register("addfeed",  commands.HandlerAddFeed)
 
   err = cmds.Run(&st, usercmd)
 

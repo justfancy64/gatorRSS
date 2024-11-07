@@ -13,8 +13,22 @@ select * FROM users WHERE name = $1;
 
 
 -- name: ClearUser :exec
-TRUNCATE TABLE users;
+DELETE FROM users;
+-- name: ClearFeed :exec
+TRUNCATE TABLE feeds;
 
 -- name: ListUsers :many
 SELECT name FROM users
 ORDER BY name;
+
+-- name: CreateFeed :one
+INSERT INTO feeds (id, created_at, updated_at, name, url, user_id)
+VALUES (
+	$1,
+	$2,
+	$3,
+	$4,
+	$5,
+	$6
+)
+RETURNING *;

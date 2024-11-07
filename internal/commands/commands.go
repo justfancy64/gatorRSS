@@ -70,6 +70,8 @@ func HandlerClear(s *state.State, cmd Command) error {
   if len(args) > 0 {
     return fmt.Errorf("no arguments neededwith clear command")
   }
+
+ 
   err := s.DB.ClearUser(context.Background())
   if err != nil {
     return fmt.Errorf("error clearing users table: %v",err)
@@ -110,3 +112,32 @@ func HandlerAgg(s *state.State, cmd Command) error {
   fmt.Println(feed)
   return nil
 }
+
+func HandlerAddFeed(s *state.State, cmd Command) error {
+  if len(cmd.Args) < 2 {
+    return fmt.Errorf("not enough arguments needs: Name URL")
+  }
+  /*
+  CurrUser, err := s.DB.GetUser(context.Background(), s.Cfg.CurrentUserName)
+  if err != nil {
+    fmt.Errorf("error fetching user info from DB: %v",err)
+  }
+  */
+
+   feed, err := s.DB.CreateFeed(context.Background(), database.CreateFeedParams{
+    ID:          uuid.New(),
+    CreatedAt:   time.Now().UTC(),
+    UpdatedAt:   time.Now().UTC(),
+    Name:        cmd.Args[0],
+    Url:         cmd.Args[1],
+    //UserID       CurrUser.ID,
+
+
+  })
+  if err != nil {
+    return fmt.Errorf("error in CreateFeedFunc: %v",err)
+  }
+  fmt.Println(feed)
+  return nil
+}
+
