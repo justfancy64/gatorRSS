@@ -3,13 +3,15 @@ package main
 import(
   "fmt"
   "os"
+  "database/sql"
   "github.com/justfancy64/gatorRSS/internal/config"
   "github.com/justfancy64/gatorRSS/internal/state"
   "github.com/justfancy64/gatorRSS/internal/commands"
+  "github.com/justfancy64/gatorRSS/internal/database"
 
 
 )
-
+import _ "github.com/lib/pq"
 
 func main() {
   if len(os.Args) < 2 {
@@ -30,16 +32,33 @@ func main() {
     fmt.Println(err)
   }
   st.Cfg = &cfg
+  dbURL := st.Cfg.DbURL
+  //fmt.Println(dbURL)
+
+  db, err := sql.Open("postgres", dbURL)
+  if err != nil {
+    fmt.Println(err)
+  }
+  defer db.Close()
+
+  dbQueries := database.New(db) // this is a pointer
+  st.DB = dbQueries
 
   var cmds commands.Commands
   cmdmap := make(map[string]func(*state.State, commands.Command) error)
   cmds.CmdMap = cmdmap
-  cmds.Register(os.Args[1],  commands.HandlerLogins)
+
+
+  cmds.Register("login",    commands.HandlerLogins)
+  cmds.Register("register", commands.RegisterHandler)
+  cmds.Register("reset",    commands.HandlerClear)
+  cmds.Register("users",    commands.HandlerListUsers)
+  cmds.Register("agg",      commands.HandlerAgg)
+
   err = cmds.Run(&st, usercmd)
 
 
 
-  st.Cfg = &cfg
   if err != nil {
 
     fmt.Println(err)
@@ -47,6 +66,5 @@ func main() {
   }
 
 
-  return
  
 }

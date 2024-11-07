@@ -29,10 +29,9 @@ func (c *Commands) Register(name string, f func(*state.State, Command) error) {
 
 
 func (c *Commands) Run(s *state.State, cmd Command) error {
-  handlerfunc := c.CmdMap[cmd.Name] 
-  err := handlerfunc(s, cmd)
-  if err != nil {
-    return fmt.Errorf("error in %s command: %v",cmd.Name, err)
+  handlerfunc, ok := c.CmdMap[cmd.Name] 
+  if !ok {
+    return fmt.Errorf("command not found")
   }
-  return nil
+  return handlerfunc(s, cmd)
 }
