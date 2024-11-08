@@ -57,6 +57,9 @@ func main() {
   cmds.Register("addfeed",  commands.HandlerAddFeed)
   cmds.Register("feeds",    commands.HandlerListFeed)
   cmds.Register("follow",   commands.HandlerFollow)
+  cmds.Register("following",commands.HandlerFollowing)
+
+
   err = cmds.Run(&st, usercmd)
 
 
@@ -64,7 +67,6 @@ func main() {
   if err != nil {
 
     fmt.Println(err)
-    os.Exit(1)
   }
 
 

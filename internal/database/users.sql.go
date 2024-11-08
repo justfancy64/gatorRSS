@@ -203,6 +203,36 @@ func (q *Queries) GetUser(ctx context.Context, name string) (User, error) {
 	return i, err
 }
 
+const getUserFollows = `-- name: GetUserFollows :many
+select feeds.name from feed_follows
+INNER join feeds
+on feed_follows.feed_id = feeds.id
+where feed_follows.user_id = $1
+`
+
+func (q *Queries) GetUserFollows(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getUserFollows, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		items = append(items, name)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listFeed = `-- name: ListFeed :many
 SELECT feeds.name, url, users.name FROM feeds
 INNER JOIN users

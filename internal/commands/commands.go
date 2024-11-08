@@ -93,6 +93,7 @@ func HandlerListUsers(s *state.State, cmd Command) error {
     if user == s.Cfg.CurrentUserName {
       user = user + " (current)"
     }
+    fmt.Println(user)
   }
 
   return nil
@@ -119,7 +120,7 @@ func HandlerAddFeed(s *state.State, cmd Command) error {
   
   CurrUser, err := s.DB.GetUser(context.Background(), s.Cfg.CurrentUserName)
   if err != nil {
-    fmt.Errorf("error fetching user info from DB: %v",err)
+    return fmt.Errorf("error fetching user info from DB: %v",err)
   }
   
 
@@ -136,6 +137,16 @@ func HandlerAddFeed(s *state.State, cmd Command) error {
   if err != nil {
     return fmt.Errorf("error in CreateFeedFunc: %v",err)
   }
+  var newArgs  []string
+  newArgs = append(newArgs, cmd.Args[1])
+  newcmd := Command{
+    Name:    cmd.Name,
+    Args:    newArgs,
+  }
+  err = HandlerFollow(s, newcmd)
+  if err != nil {
+    return err
+  }
   return nil
 }
 
@@ -147,7 +158,7 @@ func HandlerListFeed(s *state.State, cmd Command) error{
    }
   feeds, err := s.DB.ListFeed(context.Background()) // []ListFeedRow{Name, Url,Name_2}
   if err != nil {
-    return fmt.Errorf("error in ListFeed: %v")
+    return fmt.Errorf("error in ListFeed: %v", err)
   }
   fmt.Println(feeds)
   return nil
@@ -162,7 +173,7 @@ func HandlerFollow(s *state.State, cmd Command) error{
 
   CurrUser, err := s.DB.GetUser(context.Background(), s.Cfg.CurrentUserName)
   if err != nil {
-    fmt.Errorf("error fetching user info from DB: %v",err)
+    return fmt.Errorf("error fetching user info from DB: %v",err)
   } 
   feed, err := s.DB.GetFeed(context.Background(), cmd.Args[0])
   if err != nil {
@@ -183,6 +194,25 @@ func HandlerFollow(s *state.State, cmd Command) error{
   fmt.Printf("Feed: %s added for user: %s\n",row.FeedName, CurrUser.Name)
   return nil
 
+}
+
+
+func HandlerFollowing(s *state.State, cmd Command) error{
+  if len(cmd.Args) != 0 {
+    return fmt.Errorf("Following commands takes no arguments")
+  }
+  CurrUser, err := s.DB.GetUser(context.Background(), s.Cfg.CurrentUserName)
+  if err != nil {
+    return  fmt.Errorf("error fetching user info from DB: %v",err)
+  } 
+  feeds, err := s.DB.GetUserFollows(context.Background(), CurrUser.ID)
+  if err != nil {
+    return fmt.Errorf("error in GetUserFollows: %v", err)
+  }
+  for _,feed := range feeds {
+    fmt.Println(feed)
+  }
+  return nil
 }
 
 

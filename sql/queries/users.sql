@@ -67,3 +67,10 @@ ON inserted_feed_follow.user_id = users.id;
 -- name: GetFeed :one
 select * from feeds where url = $1;
 
+
+-- name: GetUserFollows :many
+select feeds.name from feed_follows
+INNER join feeds
+on feed_follows.feed_id = feeds.id
+where feed_follows.user_id = $1;
+
