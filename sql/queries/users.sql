@@ -9,7 +9,7 @@ VALUES (
 RETURNING *;
 
 -- name: GetUser :one
-select * FROM users WHERE name = $1;
+SELECT * FROM users WHERE name = $1;
 
 
 -- name: ClearUser :exec
@@ -39,3 +39,26 @@ RETURNING *;
 SELECT feeds.name, url, users.name FROM feeds
 INNER JOIN users
 ON feeds.user_id = users.id;
+
+
+
+-- name: CreateFeedFollow :many
+with inserted_feed_follow as (
+insert into feed_follows (id, created_at, updated_at, user_id, feed_id)
+values (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5
+)
+returning *
+)
+select inserted_feed_follow.*,
+feeds.name AS feed_name,
+users.name AS user_name
+from inserted_feed_follow
+inner join feeds
+ON inserted_feed_follow.feed_id = feeds.id
+inner join users
+ON inserted_feed_follow.user_id = users.id;

@@ -55,8 +55,8 @@ func main() {
   cmds.Register("users",    commands.HandlerListUsers)
   cmds.Register("agg",      commands.HandlerAgg)
   cmds.Register("addfeed",  commands.HandlerAddFeed)
-  cmds.Register("feeds",     commands.HandlerListFeed)
-
+  cmds.Register("feeds",    commands.HandlerListFeed)
+  cmds.Register("follow",   commands.HandlerFollow)
   err = cmds.Run(&st, usercmd)
 
 
