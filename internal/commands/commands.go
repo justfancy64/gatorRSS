@@ -58,7 +58,7 @@ func RegisterHandler(s *state.State, cmd Command) error {
   if err != nil {
     return err
   }
-  fmt.Printf("user %s was created successfully",user.Name )
+  fmt.Printf("user %s was created successfully\n",user.Name )
   //fmt.Println(user.ID)
   return nil
     
@@ -93,7 +93,6 @@ func HandlerListUsers(s *state.State, cmd Command) error {
     if user == s.Cfg.CurrentUserName {
       user = user + " (current)"
     }
-    fmt.Println(user)
   }
 
   return nil
@@ -124,7 +123,7 @@ func HandlerAddFeed(s *state.State, cmd Command) error {
   }
   
 
-   feed, err := s.DB.CreateFeed(context.Background(), database.CreateFeedParams{
+   _, err = s.DB.CreateFeed(context.Background(), database.CreateFeedParams{
     ID:          uuid.New(),
     CreatedAt:   time.Now().UTC(),
     UpdatedAt:   time.Now().UTC(),
@@ -137,7 +136,6 @@ func HandlerAddFeed(s *state.State, cmd Command) error {
   if err != nil {
     return fmt.Errorf("error in CreateFeedFunc: %v",err)
   }
-  fmt.Println(feed)
   return nil
 }
 
@@ -154,3 +152,38 @@ func HandlerListFeed(s *state.State, cmd Command) error{
   fmt.Println(feeds)
   return nil
 }
+
+
+
+func HandlerFollow(s *state.State, cmd Command) error{
+  if len(cmd.Args) < 1 {
+    return fmt.Errorf("not enough arguments need: URL")
+  }
+
+  CurrUser, err := s.DB.GetUser(context.Background(), s.Cfg.CurrentUserName)
+  if err != nil {
+    fmt.Errorf("error fetching user info from DB: %v",err)
+  } 
+  feed, err := s.DB.GetFeed(context.Background(), cmd.Args[0])
+  if err != nil {
+    return fmt.Errorf("error fetching feed from db: %v",err)
+  }
+
+
+  row, err := s.DB.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+    ID:            uuid.New(),
+    CreatedAt:     time.Now().UTC(),
+    UpdatedAt:     time.Now().UTC(),
+    UserID:        CurrUser.ID,
+    FeedID:        feed.ID,
+  }) 
+  if err != nil {
+    return fmt.Errorf("error in CreateFeedFollow: %v", err)
+  }
+  fmt.Printf("Feed: %s added for user: %s\n",row.FeedName, CurrUser.Name)
+  return nil
+
+}
+
+
+

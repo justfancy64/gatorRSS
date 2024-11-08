@@ -42,7 +42,7 @@ ON feeds.user_id = users.id;
 
 
 
--- name: CreateFeedFollow :many
+-- name: CreateFeedFollow :one
 with inserted_feed_follow as (
 insert into feed_follows (id, created_at, updated_at, user_id, feed_id)
 values (
@@ -62,3 +62,8 @@ inner join feeds
 ON inserted_feed_follow.feed_id = feeds.id
 inner join users
 ON inserted_feed_follow.user_id = users.id;
+
+
+-- name: GetFeed :one
+select * from feeds where url = $1;
+
