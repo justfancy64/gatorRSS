@@ -106,17 +106,24 @@ func HandlerListUsers(s *state.State, cmd Command) error {
 }
 
 
-func HandlerAgg(s *state.State, cmd Command) error {
-  // rss feed testing
-  ctx := context.Background()
-  feed, err := rss.FetchFeed(ctx, "https://www.wagslane.dev/index.xml")
-  if err != nil {
-    return err
+func HandlerAgg(s *state.State,cmd Command) error {
+  if len(cmd.Args) != 1 {
+    return fmt.Errorf("agg commands needs a valid time duration eg: 1m 1s 1ms")
   }
-  fmt.Println(feed)
-  return nil
-}
+  t , err := time.ParseDuration(cmd.Args[0])
+  if err != nil {
+    return fmt.Errorf("error in timeparseduration: %v", err)
+  }
 
+  ticker := time.NewTicker(t)
+
+  for ; ; <-ticker.C {
+    ScrapeFeeds(s)
+
+  }
+        
+
+}
 func HandlerAddFeed(s *state.State, cmd Command, user database.User) error {
   if len(cmd.Args) != 2 {
     return fmt.Errorf("not enough arguments needs: Name URL")
@@ -238,14 +245,14 @@ func MiddleWareLoggedIn(handler func(s *state.State, cmd Command, user database.
 
 
 //db scrape helper function
-func ScrapeFeeds(s *state.State) error {
+func ScrapeFeeds(s *state.State) {
   url, err := s.DB.GetNextFeedToFetch(context.Background())
   if err != nil {
-    return fmt.Errorf("error in GetNextFeedToFetch: %v", err)
+     fmt.Errorf("error in GetNextFeedToFetch: %v", err)
   }
   dbfeed, err := s.DB.GetFeed(context.Background(),url)
   if err != nil {
-    return fmt.Errorf("error fetching feed: %v",err)
+     fmt.Errorf("error fetching feed: %v",err)
   }
   err = s.DB.MarkFeedFetched(context.Background(), database.MarkFeedFetchedParams{
     UpdatedAt:       time.Now().UTC(),
@@ -253,16 +260,12 @@ func ScrapeFeeds(s *state.State) error {
 
 })
   if err != nil {
-    return fmt.Errorf("error in marking feed as fetched: %v", err)
+     fmt.Errorf("error in marking feed as fetched: %v", err)
   }
 
   rssfeed, err := rss.FetchFeed(context.Background(),url)
   if err != nil {
-    return err
+    fmt.Println(err)
   }
-
   fmt.Println(rssfeed.Channel.Title)
-
-  return nil
 }
-

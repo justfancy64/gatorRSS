@@ -67,14 +67,4 @@ func main() {
   }
 
 
-  err = commands.ScrapeFeeds(&st)
-
-
-  if err != nil {
-
-    fmt.Println(err)
-  }
-
-
- 
 }
