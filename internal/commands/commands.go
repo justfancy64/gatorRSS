@@ -70,9 +70,13 @@ func HandlerClear(s *state.State, cmd Command) error {
   if len(args) > 0 {
     return fmt.Errorf("no arguments neededwith clear command")
   }
+  err := s.DB.ClearPosts(context.Background())
+  if err != nil {
+    return fmt.Errorf("error clearing posts table: %v",err)
+  }
 
  
-  err := s.DB.ClearUser(context.Background())
+  err = s.DB.ClearUser(context.Background())
   if err != nil {
     return fmt.Errorf("error clearing users table: %v",err)
   }
@@ -267,5 +271,28 @@ func ScrapeFeeds(s *state.State) {
   if err != nil {
     fmt.Println(err)
   }
-  fmt.Println(rssfeed.Channel.Title)
+  fmt.Printf("adding post from %s to db\n", rssfeed.Channel.Link)
+  timepub, err := time.Parse("2024-11-09 11:47:42.00913", rssfeed.Channel.Item[0].PubDate)
+
+  if err != nil {
+    fmt.Errorf("error in time.parse: %v", err)
+  }
+
+  for _,item := range rssfeed.Channel.Item {
+
+  _,err := s.DB.CreatePost(context.Background(), database.CreatePostParams{
+    ID:             uuid.New(),
+    CreatedAt:      time.Now().UTC(),
+    UpdatedAt:      time.Now().UTC(),
+    Title:          item.Title,
+    Url:            item.Link,
+    Description:    item.Description,
+    PublishedAt:    timepub,
+    FeedID:         dbfeed.ID,
+  })
+  if err != nil {
+     fmt.Errorf("error in CreatePost quary")
+  }
+
+  }
 }

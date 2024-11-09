@@ -17,6 +17,9 @@ DELETE FROM users;
 -- name: ClearFeed :exec
 TRUNCATE TABLE feeds;
 
+-- name: ClearPosts :exec
+delete from posts;
+
 -- name: ListUsers :many
 SELECT name FROM users
 ORDER BY name;
@@ -87,4 +90,29 @@ where id = $2;
 select url from feeds
 order by last_fetched_at nulls first
 limit 1;
+
+
+
+-- name: CreatePost :one
+insert into posts (id,created_at,updated_at,title,url,description,published_at,feed_id)
+values (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8
+    )
+returning *;
+
+
+-- name: GetPost :many
+select * from posts
+order by published_at
+limit $1;
+
+
+
 
