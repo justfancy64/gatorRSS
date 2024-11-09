@@ -54,10 +54,11 @@ func main() {
   cmds.Register("reset",    commands.HandlerClear)
   cmds.Register("users",    commands.HandlerListUsers)
   cmds.Register("agg",      commands.HandlerAgg)
-  cmds.Register("addfeed",  commands.HandlerAddFeed)
+  cmds.Register("addfeed",  commands.MiddleWareLoggedIn(commands.HandlerAddFeed))
   cmds.Register("feeds",    commands.HandlerListFeed)
-  cmds.Register("follow",   commands.HandlerFollow)
-  cmds.Register("following",commands.HandlerFollowing)
+  cmds.Register("follow",   commands.MiddleWareLoggedIn(commands.HandlerFollow))
+  cmds.Register("following",commands.MiddleWareLoggedIn(commands.HandlerFollowing))
+  cmds.Register("unfollow", commands.MiddleWareLoggedIn(commands.HandlerUnfollow))
 
 
   err = cmds.Run(&st, usercmd)

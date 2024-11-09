@@ -117,24 +117,18 @@ func HandlerAgg(s *state.State, cmd Command) error {
   return nil
 }
 
-func HandlerAddFeed(s *state.State, cmd Command) error {
-  if len(cmd.Args) < 2 {
+func HandlerAddFeed(s *state.State, cmd Command, user database.User) error {
+  if len(cmd.Args) != 2 {
     return fmt.Errorf("not enough arguments needs: Name URL")
   }
-  
-  CurrUser, err := s.DB.GetUser(context.Background(), s.Cfg.CurrentUserName)
-  if err != nil {
-    return fmt.Errorf("error fetching user info from DB: %v",err)
-  }
-  
 
-   _, err = s.DB.CreateFeed(context.Background(), database.CreateFeedParams{
+   _, err := s.DB.CreateFeed(context.Background(), database.CreateFeedParams{
     ID:          uuid.New(),
     CreatedAt:   time.Now().UTC(),
     UpdatedAt:   time.Now().UTC(),
     Name:        cmd.Args[0],
     Url:         cmd.Args[1],
-    UserID:       CurrUser.ID,
+    UserID:      user.ID,
 
 
   })
@@ -147,7 +141,7 @@ func HandlerAddFeed(s *state.State, cmd Command) error {
     Name:    cmd.Name,
     Args:    newArgs,
   }
-  err = HandlerFollow(s, newcmd)
+  err = HandlerFollow(s, newcmd, user)
   if err != nil {
     return err
   }
@@ -170,15 +164,11 @@ func HandlerListFeed(s *state.State, cmd Command) error{
 
 
 
-func HandlerFollow(s *state.State, cmd Command) error{
-  if len(cmd.Args) < 1 {
+func HandlerFollow(s *state.State, cmd Command, user database.User) error{
+  if len(cmd.Args) != 1 {
     return fmt.Errorf("not enough arguments need: URL")
   }
 
-  CurrUser, err := s.DB.GetUser(context.Background(), s.Cfg.CurrentUserName)
-  if err != nil {
-    return fmt.Errorf("error fetching user info from DB: %v",err)
-  } 
   feed, err := s.DB.GetFeed(context.Background(), cmd.Args[0])
   if err != nil {
     return fmt.Errorf("error fetching feed from db: %v",err)
@@ -189,27 +179,23 @@ func HandlerFollow(s *state.State, cmd Command) error{
     ID:            uuid.New(),
     CreatedAt:     time.Now().UTC(),
     UpdatedAt:     time.Now().UTC(),
-    UserID:        CurrUser.ID,
+    UserID:        user.ID,
     FeedID:        feed.ID,
   }) 
   if err != nil {
     return fmt.Errorf("error in CreateFeedFollow: %v", err)
   }
-  fmt.Printf("Feed: %s added for user: %s\n",row.FeedName, CurrUser.Name)
+  fmt.Printf("Feed: %s added for user: %s\n",row.FeedName, user.Name)
   return nil
 
 }
 
 
-func HandlerFollowing(s *state.State, cmd Command) error{
+func HandlerFollowing(s *state.State, cmd Command, user database.User) error{
   if len(cmd.Args) != 0 {
     return fmt.Errorf("Following commands takes no arguments")
   }
-  CurrUser, err := s.DB.GetUser(context.Background(), s.Cfg.CurrentUserName)
-  if err != nil {
-    return  fmt.Errorf("error fetching user info from DB: %v",err)
-  } 
-  feeds, err := s.DB.GetUserFollows(context.Background(), CurrUser.ID)
+  feeds, err := s.DB.GetUserFollows(context.Background(), user.ID)
   if err != nil {
     return fmt.Errorf("error in GetUserFollows: %v", err)
   }
@@ -219,12 +205,31 @@ func HandlerFollowing(s *state.State, cmd Command) error{
   return nil
 }
 
-// middleware loggin checker for handlers requiring user to be logged in
-/*
-func MiddleWareLoggedIn(handler func(s *state.State, cmd Command) error) func(*state.State, command) error {
-  if s.
+func HandlerUnfollow(s *state.State, cmd Command, user database.User) error {
+  if len(cmd.Args) != 1 {
+    return fmt.Errorf("provide url of feed u wish to unfollow")
+  }
+  feed, err := s.DB.GetFeed(context.Background(), cmd.Args[0])
+  if err != nil {
+    return err
+  }
+  err = s.DB.DeleteFollow(context.Background(), database.DeleteFollowParams{
+     UserID:      user.ID,
+     FeedID:      feed.ID,
+  })
+
+  return nil
 }
-*/
 
+// middleware loggin checker for handlers requiring user to be logged in
 
+func MiddleWareLoggedIn(handler func(s *state.State, cmd Command, user database.User) error) func(*state.State, Command) error {
+  return func(s *state.State, cmd Command) error {
+  CurrUser, err := s.DB.GetUser(context.Background(), s.Cfg.CurrentUserName)
+  if err != nil {
+    return  fmt.Errorf("error fetching user info from DB: %v",err)
+  }
+    return handler(s, cmd, CurrUser)
+  }
+}
 
