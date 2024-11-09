@@ -217,6 +217,9 @@ func HandlerUnfollow(s *state.State, cmd Command, user database.User) error {
      UserID:      user.ID,
      FeedID:      feed.ID,
   })
+  if err != nil {
+    return err
+  }
 
   return nil
 }
@@ -231,5 +234,35 @@ func MiddleWareLoggedIn(handler func(s *state.State, cmd Command, user database.
   }
     return handler(s, cmd, CurrUser)
   }
+}
+
+
+//db scrape helper function
+func ScrapeFeeds(s *state.State) error {
+  url, err := s.DB.GetNextFeedToFetch(context.Background())
+  if err != nil {
+    return fmt.Errorf("error in GetNextFeedToFetch: %v", err)
+  }
+  dbfeed, err := s.DB.GetFeed(context.Background(),url)
+  if err != nil {
+    return fmt.Errorf("error fetching feed: %v",err)
+  }
+  err = s.DB.MarkFeedFetched(context.Background(), database.MarkFeedFetchedParams{
+    UpdatedAt:       time.Now().UTC(),
+    ID:              dbfeed.ID,
+
+})
+  if err != nil {
+    return fmt.Errorf("error in marking feed as fetched: %v", err)
+  }
+
+  rssfeed, err := rss.FetchFeed(context.Background(),url)
+  if err != nil {
+    return err
+  }
+
+  fmt.Println(rssfeed.Channel.Title)
+
+  return nil
 }
 

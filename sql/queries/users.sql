@@ -78,4 +78,13 @@ where feed_follows.user_id = $1;
 Delete from feed_follows where user_id = $1 and feed_id = $2;
 
 
+-- name: MarkFeedFetched :exec
+update feeds
+set updated_at = $1,last_fetched_at = $1
+where id = $2;
+
+-- name: GetNextFeedToFetch :one
+select url from feeds
+order by last_fetched_at nulls first
+limit 1;
 

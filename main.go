@@ -16,8 +16,7 @@ import _ "github.com/lib/pq"
 func main() {
   if len(os.Args) < 2 {
     fmt.Println("Error less than 1 argument given")
-    os.Exit(1)
-    return
+     return
   }
 
 
@@ -60,9 +59,15 @@ func main() {
   cmds.Register("following",commands.MiddleWareLoggedIn(commands.HandlerFollowing))
   cmds.Register("unfollow", commands.MiddleWareLoggedIn(commands.HandlerUnfollow))
 
-
+  
   err = cmds.Run(&st, usercmd)
+  if err != nil {
 
+    fmt.Println(err)
+  }
+
+
+  err = commands.ScrapeFeeds(&st)
 
 
   if err != nil {
