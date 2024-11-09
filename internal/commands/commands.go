@@ -4,6 +4,7 @@ import (
   "fmt"
   "context"
   "time"
+  "strconv"
   "github.com/justfancy64/gatorRSS/internal/state"
   "github.com/justfancy64/gatorRSS/internal/database"
   "github.com/justfancy64/gatorRSS/internal/rss"
@@ -234,6 +235,26 @@ func HandlerUnfollow(s *state.State, cmd Command, user database.User) error {
 
   return nil
 }
+
+func HandlerBrowse(s *state.State, cmd Command) error {
+  if len(cmd.Args) != 1 {
+    return fmt.Errorf("plz enter amount of posts:")
+  }
+  n ,err := strconv.ParseInt(cmd.Args[0], 36, 16 )
+  if err != nil {
+    return fmt.Errorf("error in strconv: %v",err)
+  }
+  posts, err := s.DB.GetPost(context.Background(), int32(n))
+  if err != nil {
+    return fmt.Errorf("error in get post: %v", err)
+  }
+  for _,post := range posts {
+    fmt.Println(post.Title)
+  }
+  return nil
+}
+
+
 
 // middleware loggin checker for handlers requiring user to be logged in
 
