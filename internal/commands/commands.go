@@ -76,6 +76,10 @@ func HandlerClear(s *state.State, cmd Command) error {
   if err != nil {
     return fmt.Errorf("error clearing users table: %v",err)
   }
+  err = s.Cfg.SetUser("")
+  if err != nil {
+    return err
+  }
   return nil
 
 }
@@ -214,6 +218,13 @@ func HandlerFollowing(s *state.State, cmd Command) error{
   }
   return nil
 }
+
+// middleware loggin checker for handlers requiring user to be logged in
+/*
+func MiddleWareLoggedIn(handler func(s *state.State, cmd Command) error) func(*state.State, command) error {
+  if s.
+}
+*/
 
 
 
