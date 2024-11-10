@@ -86,10 +86,10 @@ update feeds
 set updated_at = $1,last_fetched_at = $1
 where id = $2;
 
--- name: GetNextFeedToFetch :one
+-- name: GetNextFeedToFetch :many
 select url from feeds
 order by last_fetched_at nulls first
-limit 1;
+limit 5;
 
 
 
@@ -112,6 +112,11 @@ returning *;
 select * from posts
 order by published_at
 limit $1;
+
+
+-- name: GetSpecPost :one
+Select * from posts
+Where url = $1;
 
 
 

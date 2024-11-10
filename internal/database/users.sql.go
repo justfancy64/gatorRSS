@@ -263,17 +263,33 @@ func (q *Queries) GetFeed(ctx context.Context, url string) (Feed, error) {
 	return i, err
 }
 
-const getNextFeedToFetch = `-- name: GetNextFeedToFetch :one
+const getNextFeedToFetch = `-- name: GetNextFeedToFetch :many
 select url from feeds
 order by last_fetched_at nulls first
-limit 1
+limit 5
 `
 
-func (q *Queries) GetNextFeedToFetch(ctx context.Context) (string, error) {
-	row := q.db.QueryRowContext(ctx, getNextFeedToFetch)
-	var url string
-	err := row.Scan(&url)
-	return url, err
+func (q *Queries) GetNextFeedToFetch(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getNextFeedToFetch)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var url string
+		if err := rows.Scan(&url); err != nil {
+			return nil, err
+		}
+		items = append(items, url)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getPost = `-- name: GetPost :many
@@ -312,6 +328,27 @@ func (q *Queries) GetPost(ctx context.Context, limit int32) ([]Post, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getSpecPost = `-- name: GetSpecPost :one
+Select id, created_at, updated_at, title, url, description, published_at, feed_id from posts
+Where url = $1
+`
+
+func (q *Queries) GetSpecPost(ctx context.Context, url string) (Post, error) {
+	row := q.db.QueryRowContext(ctx, getSpecPost, url)
+	var i Post
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Title,
+		&i.Url,
+		&i.Description,
+		&i.PublishedAt,
+		&i.FeedID,
+	)
+	return i, err
 }
 
 const getUser = `-- name: GetUser :one

@@ -1,20 +1,19 @@
 -- +goose Up
 -- +goose StatementBegin
-create table posts(
-  id       UUID   PRIMARY key,
-  created_at    TIMESTAMP not null,
-  updated_at    TIMESTAMP not null,
-  title         text      not null,
-  url           text      not null,
-  description   text      not null,
-  published_at  TIMESTAMP not null,
-  feed_id       UUID      not null,
-  foreign key   (feed_id)
-  references    feeds(id)
+CREATE TABLE posts(
+  id       UUID   PRIMARY KEY,
+  created_at    TIMESTAMP NOT NULL,
+  updated_at    TIMESTAMP NOT NULL,
+  title         TEXT      NOT NULL UNIQUE,
+  url           TEXT      NOT NULL,
+  description   TEXT      NOT NULL,
+  published_at  TIMESTAMP NOT NULL,
+  feed_id       UUID      NOT NULL,
+  FOREIGN KEY   (feed_id)
+  REFERENCES    feeds(id)
 );
 -- +goose StatementEnd
-
 -- +goose Down
 -- +goose StatementBegin
-drop table posts;
+DROP TABLE posts;
 -- +goose StatementEnd

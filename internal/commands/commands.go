@@ -249,8 +249,40 @@ func HandlerBrowse(s *state.State, cmd Command) error {
     return fmt.Errorf("error in get post: %v", err)
   }
   for _,post := range posts {
-    fmt.Println(post.Title)
+    fmt.Printf("%s | %s \n",post.Title, post.Url)
   }
+  return nil
+}
+
+func HandlerRead(s *state.State, cmd Command) error {
+  if len(cmd.Args) != 1 {
+      return fmt.Errorf("plz enter the link of the post u wish to read")
+  }
+  post, err := s.DB.GetSpecPost(context.Background(), cmd.Args[0])
+  if err != nil {
+    return fmt.Errorf("error fetching spec post: %v",err)
+  }
+  fmt.Println(post.Description)
+  return nil
+}
+
+func HandlerHelp(s *state.State, cmd Command) error {
+  fmt.Printf("\n       Welcome to gatorRSS    \n \na simple cli to tool for browsing subscribed rss feeds\n")
+
+  fmt.Printf("Usage:\n\n       gatorRSS <command> [arguments]\n\n")
+  fmt.Printf("The commands are:\n\n       register  [user]      registers a new user\n")
+  fmt.Printf("       reser                 resets the database[VERY DANGEROUS!]\n")
+  fmt.Printf("       users                 lists all users registed\n")
+  fmt.Printf("       update    [duration]  updates feeds with new posts every[duration]\n")
+  fmt.Printf("       addfeed   [name,url]  adds new feed for the database\n")
+  fmt.Printf("       follow    [url]       adds a feed to a users followed list\n")
+  fmt.Printf("       following             lists current users followed feeds\n")
+  fmt.Printf("       unfollow              unfollows feed for current user\n")
+  fmt.Printf("       browse    [amount]    shows amount of posts\n")
+  fmt.Printf("       read      [url]       shows description of post\n")
+
+
+
   return nil
 }
 
@@ -271,10 +303,11 @@ func MiddleWareLoggedIn(handler func(s *state.State, cmd Command, user database.
 
 //db scrape helper function
 func ScrapeFeeds(s *state.State) {
-  url, err := s.DB.GetNextFeedToFetch(context.Background())
+  urls, err := s.DB.GetNextFeedToFetch(context.Background())
   if err != nil {
      fmt.Errorf("error in GetNextFeedToFetch: %v", err)
   }
+  for _,url := range urls {
   dbfeed, err := s.DB.GetFeed(context.Background(),url)
   if err != nil {
      fmt.Errorf("error fetching feed: %v",err)
@@ -315,5 +348,6 @@ func ScrapeFeeds(s *state.State) {
      fmt.Errorf("error in CreatePost quary")
   }
 
+  }
   }
 }
